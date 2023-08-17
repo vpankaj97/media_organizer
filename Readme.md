@@ -10,3 +10,12 @@ Plan - two ways
 2. To catrgorise inside folders - Look through all files in sub-directories and pull data into Category folders in root - [sub-directory]/[category]
 
 Move files by specific date - requiremtn - frst sort by years and then run
+
+To RUn:
+
+python "D:\Organizer\file_organizer.py" -r "<folder_path>" -d [True/False] -m [True/False]
+
+where:
+ 1. -r -> root_path
+ 2. -d -> date_wise
+ 3. -m -> move to root

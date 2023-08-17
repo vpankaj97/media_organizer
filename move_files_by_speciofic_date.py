@@ -34,15 +34,16 @@ def get_minimum_date(file_path):
         print(f"Error getting minimum date for {file_path}: {e}")
         return None
 
-def find_file_by_date(root_directory,date_to_check):
+def find_file_by_date(root_directory,date_to_check,category):
     for sub, _, files in os.walk(root_directory):
         for filename in files:
 
-            print(f"Looking at file: {filename} - {sub}")
             file_path = os.path.join(sub, filename)
             minimum_date = get_minimum_date(file_path)
             
             if minimum_date == date_to_check:
+
+                print(f"Looking at file: {filename} - {sub}")
 
                 if os.path.basename(sub) == folder:
                     #file already at the required folder
@@ -55,15 +56,21 @@ def find_file_by_date(root_directory,date_to_check):
                 print(f"Moving to {destination_folder}")
                 
                 shutil.move(file_path, os.path.join(destination_folder, filename))
+                
+                if category == 'Live Photos':
+                    file_path = file_path.split('.')[0] + '.mov'
+                    filename = filename.split('.')[0] + '.mov'
+                    shutil.move(file_path, os.path.join(destination_folder, filename))
 
-dates = '2019-11-24'
+dates = '2023-05-06'
 date_to_check = datetime.datetime.strptime(dates,'%Y-%m-%d').date()
-folder = 'Group Meetv2'
-root_path = r'E:\Images\Rishu\Camera\test'
+folder = '1BHK'
+root_path = r'E:\Images\Rishu\Camera\2023'
 categories = ["Images", "Videos", "Live Photos"]
 
 for category in categories:
-    find_file_by_date(os.path.join(root_path,category),date_to_check)
+    find_file_by_date(os.path.join(root_path,category),date_to_check,category)
+
 
 # Delete empty directories
 import subprocess

@@ -6,7 +6,6 @@ import os
 import shutil
 import datetime
 import concurrent.futures
-import argparse
 
 # %%
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".heic",".JPG", ".JPEG", ".HEIC")
@@ -19,8 +18,25 @@ def get_minimum_date(file_path):
         creation_time = stat.st_ctime
         access_time = stat.st_atime
         modified_time = stat.st_mtime
+        dt = datetime.datetime.fromtimestamp(min(creation_time, access_time, modified_time)).date()
+        # print(dt)
 
-        return datetime.datetime.fromtimestamp(min(creation_time, access_time, modified_time)).date()
+        try:
+
+            img = Image.open(file_path)
+            img_exif = img.getexif()
+   
+            for key, val in img_exif.items():
+                if key == 306:
+                    dt = val[:10]
+                    dt = datetime.datetime.strptime(dt,'%Y:%m:%d').date()
+                    # print(dt)
+                    break
+            
+            return dt
+    
+        except Exception as err:
+            return datetime.datetime.fromtimestamp(min(creation_time, access_time, modified_time)).date()
 
     except OSError as e:
         print(f"Error getting minimum date for {file_path}: {e}")
@@ -86,77 +102,130 @@ def organize_files_by_date(root_directory):
             except Exception as e:
                 print(f"Error moving and categorizing file: {e}")
 
-    # Handle Live Photos
-    for root, dirs, _ in os.walk(root_directory):
-        for dir_name in dirs:
-            folder_path = os.path.join(root_directory, dir_name)
-            try:
-
-                handle_live_photos(folder_path)
-            except Exception:
-                pass
-
 
 # %%
 def create_category_folders(root_dir):
-    image_extensions = [".jpg", ".jpeg", ".heic"]
-    video_extensions = [".mp4", ".avi", ".mov", ".mkv", ".wmv"]
+    try:
 
-    for dirpath, _, filenames in os.walk(root_dir):
-        for filename in filenames:
-            file_path = os.path.join(dirpath, filename)
+        image_extensions = [".jpg", ".jpeg", ".heic"]
+        video_extensions = [".mp4", ".avi", ".mov", ".mkv", ".wmv"]
 
-            if any(file_path.lower().endswith(ext) for ext in image_extensions):
-                category_folder = "Images"
-            elif any(file_path.lower().endswith(ext) for ext in video_extensions):
-                category_folder = "Videos"
-            else:
-                category_folder = "Unknown"
+        for dirpath, _, filenames in os.walk(root_dir):
+            for filename in filenames:
 
-            source_dir = os.path.dirname(file_path)
+                try:
+                    file_path = os.path.join(dirpath, filename)
 
-            if os.path.basename(os.path.abspath(source_dir)) in ['Images','Videos','Unknown']:
-                # print("Skipped!!")
-                continue
-            
-            destination_dir = os.path.join(source_dir, category_folder)
+                    if any(file_path.lower().endswith(ext) for ext in image_extensions):
+                        category_folder = "Images"
+                    elif any(file_path.lower().endswith(ext) for ext in video_extensions):
+                        category_folder = "Videos"
+                    else:
+                        category_folder = "Unknown"
 
-            # Create the category folder if it doesn't exist
-            if not os.path.exists(destination_dir):
-                os.makedirs(destination_dir)
+                    source_dir = os.path.dirname(file_path)
 
-            # Move the file to the category folder
-            shutil.move(file_path, os.path.join(destination_dir, filename))
+                    if os.path.basename(os.path.abspath(source_dir)) in ['Images','Videos','Unknown']:
+                        # print("Skipped!!")
+                        continue
+                    
+                    destination_dir = os.path.join(source_dir, category_folder)
+
+                    # Create the category folder if it doesn't exist
+                    if not os.path.exists(destination_dir):
+                        os.makedirs(destination_dir)
+
+                    # Move the file to the category folder
+                    shutil.move(file_path, os.path.join(destination_dir, filename))
+                
+                except Exception as e:
+                    print(e)
+                    continue
+    
+    except PermissionError as p_err:
+        print(p_err)
+        return "Failed"
 
 # %%
-date_wise = False
-
-if __name__ == "__main__":
-
-    
-    parser = argparse.ArgumentParser(description='Organize photos, videos, and other files into separate folders.')
-    parser.add_argument('root_directory_path', type=str, help='Path to the root directory containing subdirectories.')
-
-    args = parser.parse_args()
-    root_directory = args.root_directory_path
-
-    if not os.path.exists(root_directory):
-        print("Error: The specified root directory does not exist.")
-
-    # %%
-    if date_wise:
-        organize_files_by_date(root_directory) # Only for Camera - where we want to organize by date
-    else:
-        create_category_folders(root_directory) # for normal organizing
-
-
-    # Delete empty directories
-    import subprocess
-
+def move_files_to_main_folders(root_dir):
     try:
-        cmd = f'ROBOCOPY {root_directory} {root_directory} /S /MOVE'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+        # Create main folders if they don't exist
+        main_folders = ['Images', 'Videos', 'Others']
+        for folder in main_folders:
+            folder_path = os.path.join(root_dir, folder)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
 
-    except subprocess.CalledProcessError as e:
-        #print(f"Error: {e}")
-        pass
+        # Traverse through all subdirectories
+        for root, _, files in os.walk(root_dir):
+            for file in files:
+                try:
+                    file_path = os.path.join(root, file)
+                    file_extension = os.path.splitext(file)[1].lower()
+
+                    # Move files to the respective main folders
+                    if file_extension in ['.jpg', '.jpeg','.heic']:
+                        shutil.move(file_path, os.path.join(root_dir, 'Images', file))
+                    elif file_extension in ['.mp4', '.avi', '.mov', '.mkv']:
+                        shutil.move(file_path, os.path.join(root_dir, 'Videos', file))
+                    else:
+                        shutil.move(file_path, os.path.join(root_dir, 'Others', file))
+                except Exception as e:
+                    print(e)
+                    continue
+    except PermissionError as p_err:
+        print(p_err)
+        return "Failed"
+
+# %%
+import argparse
+parser = argparse.ArgumentParser(description="Categorize files in sub-directories based on type.")
+parser.add_argument("-r","--root_directory", help="Path to the root directory")
+parser.add_argument("-d","--date_wise",type = bool, default = False, nargs="?", help="Path to the root directory")
+parser.add_argument("-m","--move_to_root", type = bool, default = False, nargs="?", help="Path to the root directory")
+args = parser.parse_args()
+
+date_wise = bool(args.date_wise)
+move_to_root = bool(args.move_to_root)
+root_directory = args.root_directory
+
+print(f"\nRunning for {root_directory} \n\twith Args - Date_wise: {date_wise} and move_to_root: {move_to_root}")
+
+# %%
+# Run categorisation
+if date_wise:
+    organize_files_by_date(root_directory) # Only for Camera - where we want to organize by date
+
+elif move_to_root:
+    move_files_to_main_folders(root_directory) # Create categories in base directly
+    
+else:
+    create_category_folders(root_directory) # for normal organizing
+
+# Handle Live Photos
+for root, dirs, _ in os.walk(root_directory):
+    for dir_name in dirs:
+        folder_path = os.path.join(root_directory, dir_name)
+        try:
+
+            handle_live_photos(folder_path)
+        except Exception:
+            pass
+
+
+# Delete empty directories
+import subprocess
+
+try:
+    cmd = f'ROBOCOPY {root_directory} {root_directory} /S /MOVE'
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+
+except subprocess.CalledProcessError as e:
+    #print(f"Error: {e}")
+    pass
+
+
+# %%
+
+
+
