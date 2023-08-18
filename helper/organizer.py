@@ -2,6 +2,7 @@ import os
 import shutil
 import argparse
 
+
 def create_category_folders(root_dir):
     image_extensions = [".jpg", ".jpeg", ".png", ".gif", ".bmp"]
     video_extensions = [".mp4", ".avi", ".mov", ".mkv", ".wmv"]
@@ -27,8 +28,10 @@ def create_category_folders(root_dir):
             # Move the file to the category folder
             shutil.move(file_path, os.path.join(destination_dir, filename))
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Categorize files in sub-directories based on type.")
+    parser = argparse.ArgumentParser(
+        description="Categorize files in sub-directories based on type.")
     parser.add_argument("root_directory", help="Path to the root directory")
     args = parser.parse_args()
 
