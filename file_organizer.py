@@ -8,6 +8,7 @@ import os
 import shutil
 import datetime
 import concurrent.futures
+from PIL import Image, ExifTags
 
 # %%
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".heic", ".JPG", ".JPEG", ".HEIC")
