@@ -125,7 +125,7 @@ def create_category_folders(root_dir):
         video_extensions = [".mp4", ".avi", ".mov", ".mkv", ".wmv"]
 
         for dirpath, _, filenames in os.walk(root_dir):
-            print(f"\nWorking on Files in Directory: {dirpath}")
+            print(f"Working on Files in Directory: {dirpath}")
             for filename in filenames:
 
                 try:
