@@ -204,10 +204,8 @@ parser = argparse.ArgumentParser(
     description="Categorize files in sub-directories based on type.")
 parser.add_argument("-r", "--root_directory",
                     help="Path to the root directory")
-parser.add_argument("-d", "--date_wise", type=bool, default=False,
-                    nargs="?", help="Path to the root directory")
-parser.add_argument("-m", "--move_to_root", type=bool,
-                    default=False, nargs="?", help="Path to the root directory")
+parser.add_argument("-d", "--date_wise", action='store_true', help="Path to the root directory")
+parser.add_argument("-m", "--move_to_root", action='store_true', help="Path to the root directory")
 args = parser.parse_args()
 
 date_wise = bool(args.date_wise)
@@ -245,6 +243,7 @@ for root, dirs, _ in os.walk(root_directory):
 
 try:
     cmd = f'ROBOCOPY {root_directory} {root_directory} /S /MOVE'
+    print(f"Cleaning up empty folder - Command: | {cmd}")
     result = subprocess.run(
         cmd, shell=True, capture_output=True, text=True, check=True)
 
