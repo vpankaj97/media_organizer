@@ -242,8 +242,8 @@ for root, dirs, _ in os.walk(root_directory):
 # Delete empty directories
 
 try:
-    cmd = f'ROBOCOPY {root_directory} {root_directory} /S /MOVE'
-    print(f"Cleaning up empty folder - Command: | {cmd}")
+    cmd = f"""ROBOCOPY "{root_directory}" "{root_directory}" /S /MOVE"""
+    print(f"""Cleaning up empty folder - Command: | {cmd}""")
     result = subprocess.run(
         cmd, shell=True, capture_output=True, text=True, check=True)
 
