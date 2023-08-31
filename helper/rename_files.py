@@ -6,7 +6,7 @@ import pathlib
 
 IGNORED_DIR = ['Live Photos']
 
-IMAGE_EXTENSIONS = (".JPG", ".JPEG", ".HEIC")
+IMAGE_EXTENSIONS = (".JPG", ".JPEG", ".HEIC", ".PNG")
 VIDEO_EXTENSIONS = (".MP4", ".AVI", ".MKV", ".MOV",
                     ".WMV", ".MTS", ".3GP", ".MPG")
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         folder = os.path.basename(root)
 
         if folder in IGNORED_DIR:
-            print("Skipping")
+            print(f"Skipping - {folder}")
             continue
 
         retry_count = 0
