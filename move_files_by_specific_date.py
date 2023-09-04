@@ -70,26 +70,36 @@ def find_file_by_date(root_directory, date_to_check, category):
                     shutil.move(file_path, os.path.join(
                         destination_folder, filename))
 
-
-dates = '2022-04-05'
-date_to_check = datetime.datetime.strptime(dates, '%Y-%m-%d').date()
-folder = 'Pune - 2022 March - 18 Degrees'
-root_path = r'E:\Images\Pankaj\Camera\toSync\2022'
+year = '2020'
+month = '12'
+date = '14'
+final_date = f"{year}-{month}-{date}"
+date_to_check = datetime.datetime.strptime(final_date, '%Y-%m-%d').date()
+folder = "Stunts"
+root_paths = [
+            r'E:\Images\Pankaj\Camera\2020',
+            r'F:\Images\Pankaj\Camera\2020'
+        ]
 categories = ["Images", "Videos", "Live Photos"]
 
-for category in categories:
-    print(f"Running for category: {category}")
-    find_file_by_date(os.path.join(root_path, category),
-                      date_to_check, category)
+for root_path in root_paths:
+
+    print(f"Searching for files in Path: {root_path}")
+    
+    for category in categories:
+        print(f"Running for category: {category}")
+        find_file_by_date(os.path.join(root_path, category),
+                        date_to_check, category)
+    
+    # Delete empty directories
+    try:
+        cmd = f'ROBOCOPY "{root_path}" "{root_path}" /S /MOVE'
+        result = subprocess.run(
+            cmd, shell=True, capture_output=True, text=True, check=True)
+
+    except subprocess.CalledProcessError as e:
+        # print(f"Error: {e}")
+        pass
 
 
-# Delete empty directories
 
-try:
-    cmd = f'ROBOCOPY {root_path} {root_path} /S /MOVE'
-    result = subprocess.run(
-        cmd, shell=True, capture_output=True, text=True, check=True)
-
-except subprocess.CalledProcessError as e:
-    # print(f"Error: {e}")
-    pass

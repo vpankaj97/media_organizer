@@ -3,8 +3,15 @@ import os
 import datetime
 import argparse
 import pathlib
+import subprocess
 
 IGNORED_DIR = ['Live Photos']
+UNWANTED_FILES = [
+                  '.outside',
+                  '.inside',
+                  '.picasa.ini',
+                  'Thumbs.db'
+               ]
 
 IMAGE_EXTENSIONS = (".JPG", ".JPEG", ".HEIC", ".PNG")
 VIDEO_EXTENSIONS = (".MP4", ".AVI", ".MKV", ".MOV",
@@ -64,23 +71,26 @@ if __name__ == "__main__":
 
         retry_count = 0
 
-        for filename in files:
+        for filename in sorted(files):
 
             # print(filename)
 
             prefix = ""
 
             file_extension = pathlib.Path(filename).suffix
+            file_path = os.path.join(root, filename)
 
             if file_extension.upper() in IMAGE_EXTENSIONS:
                 prefix = "IMG"
             elif file_extension.upper() in VIDEO_EXTENSIONS:
                 prefix = "VID"
             else:
-                print(f"Skipping file - {filename}")
+                if filename in UNWANTED_FILES:
+                    print(f"Removing file - {filename}")
+                    os.remove(file_path)
+                else:
+                    print(f"Skipping file - {filename}")
                 continue
-
-            file_path = os.path.join(root, filename)
 
             minimum_date = get_minimum_date(file_path)
 
@@ -93,6 +103,8 @@ if __name__ == "__main__":
 
             try:
                 os.rename(file_path, new_file_path)
+
+                #reset count
                 retry_count = 0
 
             except Exception as e:
@@ -101,9 +113,20 @@ if __name__ == "__main__":
                     retry_count += 1
 
                     new_filename = f"""{prefix}_{minimum_date.strftime('%Y%m%d_%H%M%S')}{str(minimum_date.microsecond)[:1]}_{retry_count:02}{file_extension}"""
+                    # print(new_filename)
                     new_file_path = os.path.join(root, new_filename)
 
                     os.rename(file_path, new_file_path)
                 except Exception as e:
                     #  print(e)
                     continue
+
+    # Delete empty directories
+    try:
+        cmd = f'ROBOCOPY "{root_directory}" "{root_directory}" /S /MOVE'
+        result = subprocess.run(
+            cmd, shell=True, capture_output=True, text=True, check=True)
+
+    except subprocess.CalledProcessError as e:
+        # print(f"Error: {e}")
+        pass
