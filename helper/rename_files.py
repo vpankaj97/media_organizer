@@ -4,19 +4,9 @@ import datetime
 import argparse
 import pathlib
 import subprocess
+from config import UNWANTED_FILES, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
 
 IGNORED_DIR = ['Live Photos']
-UNWANTED_FILES = [
-                  '.outside',
-                  '.inside',
-                  '.picasa.ini',
-                  'Thumbs.db'
-               ]
-
-IMAGE_EXTENSIONS = (".JPG", ".JPEG", ".HEIC", ".PNG")
-VIDEO_EXTENSIONS = (".MP4", ".AVI", ".MKV", ".MOV",
-                    ".WMV", ".MTS", ".3GP", ".MPG")
-
 
 def get_minimum_date(file_path):
     try:

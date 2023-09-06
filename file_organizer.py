@@ -1,7 +1,3 @@
-# %% [markdown]
-# # Better way to do this
-
-# %%
 import subprocess
 import argparse
 import os
@@ -10,13 +6,7 @@ import datetime
 import concurrent.futures
 from PIL import Image, ExifTags
 
-# %%
-IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".heic", ".JPG", ".JPEG", ".HEIC")
-VIDEO_EXTENSIONS = (".mp4", ".avi", ".mkv", ".mov", ".wmv",
-                    ".MP4", ".AVI", ".MKV", ".MOV", ".WMV")
-
-# %%
-
+from helper.config import UNWANTED_FILES, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
 
 def get_minimum_date(file_path):
     try:
@@ -49,14 +39,12 @@ def get_minimum_date(file_path):
         print(f"Error getting minimum date for {file_path}: {e}")
         return None
 
-
-# %%
 def move_and_categorize(file_path, folder_path):
     _, ext = os.path.splitext(file_path)
 
-    if ext.lower() in IMAGE_EXTENSIONS:
+    if ext.upper() in IMAGE_EXTENSIONS:
         media_type_folder = os.path.join(folder_path, "Images")
-    elif ext.lower() in VIDEO_EXTENSIONS:
+    elif ext.upper() in VIDEO_EXTENSIONS:
         media_type_folder = os.path.join(folder_path, "Videos")
     else:
         media_type_folder = os.path.join(folder_path, "Others")
@@ -67,8 +55,6 @@ def move_and_categorize(file_path, folder_path):
     shutil.move(file_path, os.path.join(
         media_type_folder, os.path.basename(file_path)))
 
-
-# %%
 def handle_live_photos(folder_path):
     images_folder = os.path.join(folder_path, "Images")
     videos_folder = os.path.join(folder_path, "Videos")
@@ -88,8 +74,6 @@ def handle_live_photos(folder_path):
             shutil.move(video_path, os.path.join(
                 live_photos_folder, os.path.basename(video_path)))
 
-
-# %%
 def organize_files_by_date(root_directory):
 
     # Move files into Categories
@@ -116,13 +100,8 @@ def organize_files_by_date(root_directory):
             except Exception as e:
                 print(f"Error moving and categorizing file: {e}")
 
-
-# %%
 def create_category_folders(root_dir):
     try:
-
-        image_extensions = [".jpg", ".jpeg", ".heic"]
-        video_extensions = [".mp4", ".avi", ".mov", ".mkv", ".wmv"]
 
         for dirpath, _, filenames in os.walk(root_dir):
             print(f"Working on Files in Directory: {dirpath}")
@@ -131,9 +110,9 @@ def create_category_folders(root_dir):
                 try:
                     file_path = os.path.join(dirpath, filename)
 
-                    if any(file_path.lower().endswith(ext) for ext in image_extensions):
+                    if any(file_path.upper().endswith(ext) for ext in IMAGE_EXTENSIONS):
                         category_folder = "Images"
-                    elif any(file_path.lower().endswith(ext) for ext in video_extensions):
+                    elif any(file_path.upper().endswith(ext) for ext in VIDEO_EXTENSIONS):
                         category_folder = "Videos"
                     else:
                         category_folder = "Unknown"
@@ -161,9 +140,6 @@ def create_category_folders(root_dir):
     except PermissionError as p_err:
         print(p_err)
         return "Failed"
-
-# %%
-
 
 def move_files_to_main_folders(root_dir):
     try:
@@ -198,55 +174,52 @@ def move_files_to_main_folders(root_dir):
         print(p_err)
         return "Failed"
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Categorize files in sub-directories based on type.")
+    parser.add_argument("-r", "--root_directory",
+                        help="Path to the root directory")
+    parser.add_argument("-d", "--date_wise", action='store_true', help="Path to the root directory")
+    parser.add_argument("-m", "--move_to_root", action='store_true', help="Path to the root directory")
+    args = parser.parse_args()
 
-# %%
-parser = argparse.ArgumentParser(
-    description="Categorize files in sub-directories based on type.")
-parser.add_argument("-r", "--root_directory",
-                    help="Path to the root directory")
-parser.add_argument("-d", "--date_wise", action='store_true', help="Path to the root directory")
-parser.add_argument("-m", "--move_to_root", action='store_true', help="Path to the root directory")
-args = parser.parse_args()
+    date_wise = bool(args.date_wise)
+    move_to_root = bool(args.move_to_root)
+    root_directory = args.root_directory
 
-date_wise = bool(args.date_wise)
-move_to_root = bool(args.move_to_root)
-root_directory = args.root_directory
+    print(
+        f"\nRunning for {root_directory} \n\twith Args - Date_wise: {date_wise} and move_to_root: {move_to_root}")
 
-print(
-    f"\nRunning for {root_directory} \n\twith Args - Date_wise: {date_wise} and move_to_root: {move_to_root}")
+    if date_wise:
+        # Only for Camera - where we want to organize by date
+        organize_files_by_date(root_directory)
 
-# %%
-# Run categorisation
-if date_wise:
-    # Only for Camera - where we want to organize by date
-    organize_files_by_date(root_directory)
+    elif move_to_root:
+        # Create categories in base directly
+        move_files_to_main_folders(root_directory)
 
-elif move_to_root:
-    # Create categories in base directly
-    move_files_to_main_folders(root_directory)
+    else:
+        create_category_folders(root_directory)  # for normal organizing
 
-else:
-    create_category_folders(root_directory)  # for normal organizing
+    # Handle Live Photos
+    for root, dirs, _ in os.walk(root_directory):
+        for dir_name in dirs:
+            folder_path = os.path.join(root_directory, dir_name)
+            try:
 
-# Handle Live Photos
-for root, dirs, _ in os.walk(root_directory):
-    for dir_name in dirs:
-        folder_path = os.path.join(root_directory, dir_name)
-        try:
-
-            handle_live_photos(folder_path)
-        except Exception:
-            pass
+                handle_live_photos(folder_path)
+            except Exception:
+                pass
 
 
-# Delete empty directories
+    # Delete empty directories
 
-try:
-    cmd = f"""ROBOCOPY "{root_directory}" "{root_directory}" /S /MOVE"""
-    print(f"""Cleaning up empty folder - Command: | {cmd}""")
-    result = subprocess.run(
-        cmd, shell=True, capture_output=True, text=True, check=True)
+    try:
+        cmd = f"""ROBOCOPY "{root_directory}" "{root_directory}" /S /MOVE"""
+        print(f"""Cleaning up empty folder - Command: | {cmd}""")
+        result = subprocess.run(
+            cmd, shell=True, capture_output=True, text=True, check=True)
 
-except subprocess.CalledProcessError as e:
-    # print(f"Error: {e}")
-    pass
+    except subprocess.CalledProcessError as e:
+        # print(f"Error: {e}")
+        pass

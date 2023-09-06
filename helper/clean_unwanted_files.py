@@ -1,14 +1,7 @@
 import argparse
 import os
 import subprocess
-
-UNWANTED_FILES = [
-                  '.outside',
-                  '.inside',
-                  '.picasa.ini',
-                  'Thumbs.db'
-               ]
-
+from config import UNWANTED_FILES
 
 def remove_unwanted_files (root_dir):
    for dirpath, _, filenames in os.walk(root_dir):
