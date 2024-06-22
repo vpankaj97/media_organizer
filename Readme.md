@@ -1,9 +1,5 @@
 To run:
 
-Look at final_organizer.ipynb file
-
-[base_move -> Look throuogh all files in sub-directories and pull data into Catrgory folders in root]
-
 Plan - two ways
 
 1. To get base folders - better way to adopt move by date function - YYYY/[category]
@@ -13,7 +9,7 @@ Move files by specific date - requiremtn - frst sort by years and then run
 
 To RUn:
 
-python "D:\Organizer\file_organizer.py" -r "<folder_path>" -d [True/False] -m [True/False]
+python "D:\Windows\Portable Apps\Organizer\file_organizer.py" -r "<folder_path>" -d [True/False/Empty] -m [True/False/Empty]
 
 where:
  1. -r -> root_path

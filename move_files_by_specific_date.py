@@ -12,9 +12,6 @@ def get_minimum_date(file_path):
         creation_time = stat.st_ctime
         access_time = stat.st_atime
         modified_time = stat.st_mtime
-        dt = datetime.datetime.fromtimestamp(
-            min(creation_time, access_time, modified_time)).date()
-        # print(dt)
 
         try:
 
@@ -34,7 +31,6 @@ def get_minimum_date(file_path):
             return datetime.datetime.fromtimestamp(min(creation_time, access_time, modified_time)).date()
 
     except OSError as e:
-        print(f"Error getting minimum date for {file_path}: {e}")
         return None
 
 
@@ -65,32 +61,38 @@ def find_file_by_date(root_directory, date_to_check, category):
                     destination_folder, filename))
 
                 if category == 'Live Photos':
-                    file_path = file_path.split('.')[0] + '.mov'
-                    filename = filename.split('.')[0] + '.mov'
-                    shutil.move(file_path, os.path.join(
-                        destination_folder, filename))
+                    # Check for mov
+                    file_path = file_path.split('.')[0]+'.mov'
+                    print(f"Moving {file_path} to {destination_folder}")
+                    if os.path.exists(file_path):
+                        filename = filename.split('.')[0] + '.mov'
+                        try:
+                            shutil.move(file_path, os.path.join(destination_folder, filename))
+                        except FileNotFoundError:
+                            file_path = file_path.split('.')[0]+'.MOV'
+                            shutil.move(file_path, os.path.join(destination_folder, filename))
 
-year = '2020'
-month = '12'
-date = '14'
+
+date = '28'
+month = '05'
+year = '2023'
 final_date = f"{year}-{month}-{date}"
 date_to_check = datetime.datetime.strptime(final_date, '%Y-%m-%d').date()
-folder = "Stunts"
+folder = "Rishu Bday 2023"
 root_paths = [
-            r'E:\Images\Pankaj\Camera\2020',
-            r'F:\Images\Pankaj\Camera\2020'
-        ]
+    r'G:\Images\Rishu\Camera\2023'
+]
 categories = ["Images", "Videos", "Live Photos"]
 
 for root_path in root_paths:
 
     print(f"Searching for files in Path: {root_path}")
-    
+
     for category in categories:
         print(f"Running for category: {category}")
         find_file_by_date(os.path.join(root_path, category),
-                        date_to_check, category)
-    
+                          date_to_check, category)
+
     # Delete empty directories
     try:
         cmd = f'ROBOCOPY "{root_path}" "{root_path}" /S /MOVE'
@@ -100,6 +102,3 @@ for root_path in root_paths:
     except subprocess.CalledProcessError as e:
         # print(f"Error: {e}")
         pass
-
-
-
