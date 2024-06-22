@@ -11,10 +11,11 @@ from PIL import Image
 
 
 from helper.config import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
+from config import UNWANTED_FILES
 
 
 def parse_args():
-    """ Parses Args """
+    """Parses Args"""
     parser = argparse.ArgumentParser(
         description="Categorize files in sub-directories based on type."
     )
@@ -69,15 +70,15 @@ def delete_empty_dirs(root_dir, test_run, rm) -> None:
         for root, _, files in os.walk(root_dir):
             for filename in files:
                 try:
-                    if filename.startswith("."):
+                    if filename.startswith(".") or filename in UNWANTED_FILES:
                         file_path = os.path.join(root, filename)
                         if os.path.exists(file_path):
                             os.remove(file_path)
                             # print(f"Deleted file: {file_path}")
                         else:
                             print(f"Path - {file_path} does not exist")
-                except PermissionError as pe:
-                    print(pe)
+
+                except PermissionError:
                     continue
 
 
