@@ -10,8 +10,8 @@ import argparse
 from PIL import Image
 
 
-from helper.config import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
-from config import UNWANTED_FILES
+from helper.config import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS, RAW_EXTENSIONS
+from helper.config import UNWANTED_FILES
 
 
 def parse_args():
@@ -125,6 +125,8 @@ def move_and_categorize(file_path, folder_path):
         media_type_folder = os.path.join(folder_path, "Images")
     elif ext.upper() in VIDEO_EXTENSIONS:
         media_type_folder = os.path.join(folder_path, "Videos")
+    elif ext.upper() in RAW_EXTENSIONS:
+        media_type_folder = os.path.join(folder_path, "RAW")
     else:
         media_type_folder = os.path.join(folder_path, "Others")
 
@@ -211,7 +213,7 @@ def move_files_to_main_folders(root_dir, test, rm):
     """Move files to main folders"""
     try:
         # Create main folders if they don't exist
-        main_folders = ["Images", "Videos", "Others"]
+        main_folders = ["Images", "Videos", "Others", "RAW"]
         for folder in main_folders:
             folder_path = os.path.join(root_dir, folder)
             if not os.path.exists(folder_path) and not test:
@@ -222,18 +224,22 @@ def move_files_to_main_folders(root_dir, test, rm):
             for file in files:
                 try:
                     file_path = os.path.join(root, file)
-                    file_extension = os.path.splitext(file)[1].lower()
+                    file_extension = os.path.splitext(file)[1].upper()
 
                     # Move files to the respective main folders
                     if not test:
-                        if file_extension in [".jpg", ".jpeg", ".heic"]:
+                        if file_extension in IMAGE_EXTENSIONS:
                             shutil.move(
                                 file_path, os.path.join(root_dir, "Images", file)
                             )
-                        elif file_extension in [".mp4", ".avi", ".mov", ".mkv"]:
+                        elif file_extension in VIDEO_EXTENSIONS:
                             shutil.move(
                                 file_path, os.path.join(root_dir, "Videos", file)
                             )
+
+                        elif file_extension in RAW_EXTENSIONS:
+                            shutil.move(file_path, os.path.join(root_dir, "RAW", file))
+
                         else:
                             shutil.move(
                                 file_path, os.path.join(root_dir, "Others", file)
@@ -266,6 +272,8 @@ def create_category_folders(root_dir, test, rm):
                         file_path.upper().endswith(ext) for ext in VIDEO_EXTENSIONS
                     ):
                         category_folder = "Videos"
+                    elif any(file_path.upper().endswith(ext) for ext in RAW_EXTENSIONS):
+                        category_folder = "RAW"
                     else:
                         category_folder = "Unknown"
 

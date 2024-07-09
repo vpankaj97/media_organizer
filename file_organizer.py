@@ -31,7 +31,7 @@ if __name__ == "__main__":
                         path = os.path.join(root_directory, subdir)
                         move_files_to_main_folders(path, test, remove_flag)
                         handle_live_photos(path, test, remove_flag)
-            except Exception:
+            except:
                 pass
 
     elif move_to_root:
